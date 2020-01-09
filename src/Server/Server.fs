@@ -18,9 +18,9 @@ let port =
     |> tryGetEnv |> Option.map uint16 |> Option.defaultValue 8085us
 
 let webApp = router {
-    get "/api/init" (fun next ctx ->
+    get "/api/inits" (fun next ctx ->
         task {
-            let counter = {Value = 42}
+            let counter = {Value = 43}
             return! json counter next ctx
         })
 }
