@@ -2,6 +2,7 @@ module Client
 
 open Elmish
 open Elmish.React
+open Elmish.Bridge
 open Fable.React
 open Fable.React.Props
 open Fetch.Types
@@ -22,16 +23,11 @@ type Model = { Counter: Counter option }
 type Msg =
     | Increment
     | Decrement
-    | InitialCountLoaded of Counter
-
-let initialCounter () = Fetch.fetchAs<Counter> "/api/inits"
+    | Remote of ClientMsg
 
 // defines the initial state and initial command (= side-effect) of the application
 let init () : Model * Cmd<Msg> =
-    let initialModel = { Counter = None }
-    let loadCountCmd =
-        Cmd.OfPromise.perform initialCounter () InitialCountLoaded
-    initialModel, loadCountCmd
+    { Counter = None }, Cmd.none
 
 // The update function computes the next state of the application based on the current state and the incoming events/messages
 // It can also run side-effects (encoded as commands) like calling the server via Http.
@@ -39,16 +35,14 @@ let init () : Model * Cmd<Msg> =
 let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
     match currentModel.Counter, msg with
     | Some counter, Increment ->
-        let nextModel = { currentModel with Counter = Some { Value = counter.Value + 1 } }
-        nextModel, Cmd.none
+        let nextCounter = { counter with Value = counter.Value + 1 }
+        currentModel, Cmd.bridgeSendOr ServerMsg.Increment (Remote(SyncCounter nextCounter))
     | Some counter, Decrement ->
-        let nextModel = { currentModel with Counter = Some { Value = counter.Value - 1 } }
-        nextModel, Cmd.none
-    | _, InitialCountLoaded initialCount->
-        let nextModel = { Counter = Some initialCount }
-        nextModel, Cmd.none
+        let nextCounter = { counter with Value = counter.Value - 1 }
+        currentModel, Cmd.bridgeSendOr ServerMsg.Decrement (Remote(SyncCounter nextCounter))
+    | _, Remote(SyncCounter counter) ->
+        { currentModel with Counter = Some counter}, Cmd.none
     | _ -> currentModel, Cmd.none
-
 
 let safeComponents =
     let components =
@@ -107,7 +101,17 @@ open Elmish.Debug
 open Elmish.HMR
 #endif
 
+#if DEBUG
+open Elmish.Debug
+open Elmish.HMR
+#endif
+
 Program.mkProgram init update view
+|> Program.withBridgeConfig
+    (
+        Bridge.endpoint "/socket/init"
+        |> Bridge.withMapping Remote
+    )
 #if DEBUG
 |> Program.withConsoleTrace
 #endif

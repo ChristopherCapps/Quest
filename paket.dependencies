@@ -8,6 +8,7 @@ group Server
     nuget FSharp.Core
     nuget Saturn
     nuget Thoth.Json.Giraffe
+    nuget Elmish.Bridge.Giraffe ~> 3
 
 group Client
     source https://api.nuget.org/v3/index.json
@@ -23,6 +24,7 @@ group Client
     nuget Fable.React ~> 5
     nuget Fulma ~> 2
     nuget Fable.FontAwesome.Free ~> 2
+    nuget Elmish.Bridge.Client ~> 3
 
 group Build
     source https://api.nuget.org/v3/index.json
