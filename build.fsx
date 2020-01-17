@@ -82,6 +82,10 @@ Target.create "Build" (fun _ ->
     runTool yarnTool "webpack-cli -p" __SOURCE_DIRECTORY__
 )
 
+Target.create "BuildServer" (fun _ ->
+    runDotNet "build" serverPath
+)
+
 Target.create "Run" (fun _ ->
     let server = async {
         runDotNet "watch run" serverPath
@@ -119,6 +123,9 @@ open Fake.Core.TargetOperators
     ==> "InstallClient"
     ==> "Build"
 
+"Clean"
+    ==> "InstallClient"
+    ==> "BuildServer"
 
 "Clean"
     ==> "InstallClient"

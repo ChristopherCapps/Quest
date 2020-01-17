@@ -39,6 +39,7 @@ let update clientDispatch msg model =
         clientDispatch (SyncCounter newModel)
         newModel, Cmd.none
 
+
 /// Connect the Elmish functions to an endpoint for websocket connections
 let webApp =
     Bridge.mkServer "/socket/init" init update
